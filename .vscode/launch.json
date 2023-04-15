@@ -5,6 +5,62 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Download",
+            "type": "python",
+            "request": "launch",
+            "program": "analyzer/download.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Train",
+            "type": "python",
+            "request": "launch",
+            "program": "analyzer/train.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {   
+            "name": "Test",
+            "type": "python",
+            "request": "launch",
+            "program": "analyzer/test.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Use Distance",
+            "type": "python",
+            "request": "launch",
+            "program": "analyzer/use_distance.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Use Prediction",
+            "type": "python",
+            "request": "launch",
+            "program": "analyzer/use_prediction.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Use Grouping",
+            "type": "python",
+            "request": "launch",
+            "program": "analyzer/use_grouping.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Use Plot",
+            "type": "python",
+            "request": "launch",
+            "program": "analyzer/use_plot.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Run Server",
             "type": "python",
             "request": "launch",
