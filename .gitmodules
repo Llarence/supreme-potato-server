@@ -1,0 +1,4 @@
+[submodule "analyzer"]
+	path = analyzer
+	url = https://github.com/Llarence/supreme-potato-analyzer
+    branch = 2.0
