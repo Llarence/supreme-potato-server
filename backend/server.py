@@ -13,8 +13,9 @@ predictor.load()
 
 app = fastapi.FastAPI(docs_url=None, redoc_url=None)
 
+# Could optimize graph generation
 @app.get('/match')
-def read_match(response: fastapi.Response, blue1: int, blue2: int, blue3: int, red1: int, red2: int, red3: int, elim: bool, week: int, detail: bool = False):
+def read_match(response: fastapi.Response, blue1: int, blue2: int, blue3: int, red1: int, red2: int, red3: int, elim: bool, week: int, graph: bool = False):
     try:
         match = [[['frc' + str(blue1), 'frc' + str(blue2), 'frc' + str(blue3)], [0, 0, 0, 0]], [['frc' + str(red1), 'frc' + str(red2), 'frc' + str(red3)], [0, 0, 0, 0]], [elim, week]]
         match_tensors = load.match_to_tensors(match)
@@ -26,7 +27,7 @@ def read_match(response: fastapi.Response, blue1: int, blue2: int, blue3: int, r
 
         sample_sums = []
         for i in range(2):
-            sample_sum_dist = tf.reduce_sum(output_dist[i].sample(25000), 1)
+            sample_sum_dist = tf.reduce_sum(output_dist[i].sample(25456), 1)
             sample_sums.append(sample_sum_dist)
 
         sides = []
@@ -40,7 +41,7 @@ def read_match(response: fastapi.Response, blue1: int, blue2: int, blue3: int, r
 
             sides.append(side)
 
-        if detail:
+        if graph:
             density_funs = []
             mins = []
             maxs = []

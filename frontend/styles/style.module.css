@@ -1,0 +1,8 @@
+.table {
+    width: 100%;
+    display: table;
+}
+
+.cell {
+    display: table-cell
+}

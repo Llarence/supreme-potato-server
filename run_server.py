@@ -15,3 +15,6 @@ frontend = multitasking.Process(target=run_frontend)
 
 backend.start()
 frontend.start()
+
+backend.join()
+frontend.join()
