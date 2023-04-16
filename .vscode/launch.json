@@ -8,7 +8,7 @@
             "name": "Download",
             "type": "python",
             "request": "launch",
-            "program": "analyzer/download.py",
+            "program": "backend/analyzer/download.py",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -16,7 +16,7 @@
             "name": "Train",
             "type": "python",
             "request": "launch",
-            "program": "analyzer/train.py",
+            "program": "backend/analyzer/train.py",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -24,7 +24,7 @@
             "name": "Test",
             "type": "python",
             "request": "launch",
-            "program": "analyzer/test.py",
+            "program": "backend/analyzer/test.py",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -32,7 +32,7 @@
             "name": "Use Distance",
             "type": "python",
             "request": "launch",
-            "program": "analyzer/use_distance.py",
+            "program": "backend/analyzer/use_distance.py",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -40,7 +40,7 @@
             "name": "Use Prediction",
             "type": "python",
             "request": "launch",
-            "program": "analyzer/use_prediction.py",
+            "program": "backend/analyzer/use_prediction.py",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -48,7 +48,7 @@
             "name": "Use Grouping",
             "type": "python",
             "request": "launch",
-            "program": "analyzer/use_grouping.py",
+            "program": "backend/analyzer/use_grouping.py",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -56,7 +56,7 @@
             "name": "Use Plot",
             "type": "python",
             "request": "launch",
-            "program": "analyzer/use_plot.py",
+            "program": "backend/analyzer/use_plot.py",
             "console": "integratedTerminal",
             "justMyCode": true
         },
