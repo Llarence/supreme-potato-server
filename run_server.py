@@ -8,7 +8,10 @@ def run_backend():
     uvicorn.run('server:app', port=2521)
 
 def run_frontend():
-    pass
+    import os
+
+    os.chdir(os.getcwd() + '/frontend')
+    os.system('npm run start')
 
 backend = multitasking.Process(target=run_backend)
 frontend = multitasking.Process(target=run_frontend)

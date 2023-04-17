@@ -4,8 +4,6 @@ from scipy.stats import gaussian_kde
 
 import fastapi
 
-import traceback
-
 from analyzer import models, load, constants
 
 predictor = models.Predictor()
@@ -13,9 +11,13 @@ predictor.load()
 
 app = fastapi.FastAPI(docs_url=None, redoc_url=None)
 
-# Could optimize graph generation
+# Could optimize distribution generation
 @app.get('/match')
-def read_match(response: fastapi.Response, blue1: int, blue2: int, blue3: int, red1: int, red2: int, red3: int, elim: bool, week: int, graph: bool = False):
+def read_match(response: fastapi.Response, blue1: int, blue2: int, blue3: int, red1: int, red2: int, red3: int, elim: bool, week: int, detail: int = 0):
+    if detail > 60 or detail < 0:
+        response.status_code = fastapi.status.HTTP_400_BAD_REQUEST
+        return
+
     try:
         match = [[['frc' + str(blue1), 'frc' + str(blue2), 'frc' + str(blue3)], [0, 0, 0, 0]], [['frc' + str(red1), 'frc' + str(red2), 'frc' + str(red3)], [0, 0, 0, 0]], [elim, week]]
         match_tensors = load.match_to_tensors(match)
@@ -41,7 +43,7 @@ def read_match(response: fastapi.Response, blue1: int, blue2: int, blue3: int, r
 
             sides.append(side)
 
-        if graph:
+        if not detail == 0:
             density_funs = []
             mins = []
             maxs = []
@@ -51,7 +53,7 @@ def read_match(response: fastapi.Response, blue1: int, blue2: int, blue3: int, r
 
             for i in range(2):
                 density = gaussian_kde(sample_sums[i])
-                density.covariance_factor = lambda : 0.25
+                density.covariance_factor = lambda : 1.5
                 density._compute_covariance()
 
                 density_funs.append(density)
@@ -60,7 +62,7 @@ def read_match(response: fastapi.Response, blue1: int, blue2: int, blue3: int, r
 
             distribution_data = {}
             for j, quantity_tracked in enumerate(constants.quantities_tracked):
-                xs = np.linspace(min(means[0][j] - stddevs[0][j] * 2, means[1][j] - stddevs[1][j] * 2, means[0][j], means[1][j]), max(means[0][j] + stddevs[0][j] * 2, means[1][j] + stddevs[1][j] * 2, means[0][j], means[1][j]), 15)
+                xs = np.linspace(min(means[0][j] - stddevs[0][j] * 2, means[1][j] - stddevs[1][j] * 2), max(means[0][j] + stddevs[0][j] * 2, means[1][j] + stddevs[1][j] * 2), detail)
 
                 data = []
                 for x in xs:
@@ -69,7 +71,7 @@ def read_match(response: fastapi.Response, blue1: int, blue2: int, blue3: int, r
                 
                 distribution_data[quantity_tracked + '_distribution'] = data
             
-            xs = np.linspace(min(min(mins), sum_means[0], sum_means[1]), max(max(maxs), sum_means[0], sum_means[1]), 15)
+            xs = np.linspace(min(tf.reduce_sum(means[0][:] - stddevs[0][:] * 2), tf.reduce_sum(means[1][:] - stddevs[1][:] * 2)), max(tf.reduce_sum(means[0][:] + stddevs[0][:] * 2), tf.reduce_sum(means[1][:] + stddevs[1][:] * 2)), detail)
 
             data = []
             for x in xs:
@@ -80,6 +82,5 @@ def read_match(response: fastapi.Response, blue1: int, blue2: int, blue3: int, r
             return {'blue': sides[0], 'red': sides[1], 'distribution_data': distribution_data}
         else:
             return {'blue': sides[0], 'red': sides[1]}
-    except Exception as e:
-        traceback.print_exc()
+    except:
         response.status_code = fastapi.status.HTTP_400_BAD_REQUEST
