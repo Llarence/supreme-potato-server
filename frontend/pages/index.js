@@ -198,7 +198,7 @@ export default function Home() {
                     <div className={style.cell}>
                         <div className={style.table}>
                             <div className={style.cell}>
-                                <p>Precision</p>
+                                <p>Precision:</p>
                                 <input type='range' min='0' max='6' value={precision} onChange={e => precisionSet(parseInt(e.target.value))}/>
                             </div>
                             <div className={style.cell}>
