@@ -32,8 +32,14 @@ def get_event_teams(key):
 
 def get_event_matches(key):
     raw_event = tba.event(key)
-    if raw_event['week'] == None:
-        return []
+
+    week = raw_event['week']
+    if week == None:
+        # Einsteins are not included (I think)
+        if raw_event['event_type'] == 3:
+            week = 8
+        else:
+            return []
 
     raw_matches = tba.event_matches(key)
 
@@ -52,7 +58,7 @@ def get_event_matches(key):
             red_auto = raw_match['score_breakdown']['red']['autoPoints']
             red_endgame = raw_match['score_breakdown']['red']['endGameParkPoints'] + raw_match['score_breakdown']['red']['endGameChargeStationPoints']
 
-            matches.append(((raw_match['alliances']['blue']['team_keys'], (blue_auto, blue_teleop, blue_endgame, blue_foul)), (raw_match['alliances']['red']['team_keys'], (red_auto, red_teleop, red_endgame, red_foul)), (raw_match['comp_level'] != 'qm', raw_event['week'])))
+            matches.append(((raw_match['alliances']['blue']['team_keys'], (blue_auto, blue_teleop, blue_endgame, blue_foul)), (raw_match['alliances']['red']['team_keys'], (red_auto, red_teleop, red_endgame, red_foul)), (raw_match['comp_level'] != 'qm', week)))
         except:
             pass
 

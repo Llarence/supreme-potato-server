@@ -17,7 +17,7 @@ indices_to_teams = {v: k for k, v in teams_to_indices.items()}
 team_indices = list(teams_to_indices.values())
 one_hot_cache = tf.one_hot(team_indices, len(team_indices))
 
-# Speedup
+# Speedup should save to file
 def match_to_tensors(match):
     blue_robots = one_hot_cache[teams_to_indices[match[0][0][0]]] + one_hot_cache[teams_to_indices[match[0][0][1]]] + one_hot_cache[teams_to_indices[match[0][0][2]]]
     blue_output = match[0][1]

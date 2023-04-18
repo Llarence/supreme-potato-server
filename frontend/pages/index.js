@@ -196,11 +196,21 @@ export default function Home() {
                         <input className={style.thin} type='number' value={week} onChange={e => weekSet(e.target.value)}/>
                     </div>
                     <div className={style.cell}>
-                        <button onClick={onClick}>Update</button>
-                        {/* getGraphSet(!getGraph) is sus */}
-                        <input type='checkbox' checked={getGraph} onChange={_ => getGraphSet(!getGraph)}/>
-                        <input type='range' min='0' max='6' value={precision} onChange={e => precisionSet(parseInt(e.target.value))}/>
-                        <p>{message}</p>
+                        <div className={style.table}>
+                            <div className={style.cell}>
+                                <p>Precision</p>
+                                <input type='range' min='0' max='6' value={precision} onChange={e => precisionSet(parseInt(e.target.value))}/>
+                            </div>
+                            <div className={style.cell}>
+                                {/* getGraphSet(!getGraph) is sus */}
+                                <p>Get Graph:</p>
+                                <input type='checkbox' checked={getGraph} onChange={_ => getGraphSet(!getGraph)}/>
+                            </div>
+                            <div className={style.cell}>
+                                <button onClick={onClick}>Update</button>
+                                <p>{message}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className={style.table}>
