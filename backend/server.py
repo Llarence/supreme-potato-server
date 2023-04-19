@@ -13,14 +13,14 @@ app = fastapi.FastAPI(docs_url=None, redoc_url=None)
 
 # Could optimize distribution generation
 @app.get('/match')
-def read_match(response: fastapi.Response, blue1: int, blue2: int, blue3: int, red1: int, red2: int, red3: int, elim: bool, week: int, detail: int = 0):
+def get_hypo_match(response: fastapi.Response, blues: list[int], reds: list[int], elim: bool, week: int, detail: int = 0):
     if detail > 60 or detail < 0:
         response.status_code = fastapi.status.HTTP_400_BAD_REQUEST
         return
 
     try:
-        match = [[['frc' + str(blue1), 'frc' + str(blue2), 'frc' + str(blue3)], [0, 0, 0, 0]], [['frc' + str(red1), 'frc' + str(red2), 'frc' + str(red3)], [0, 0, 0, 0]], [elim, week]]
-        match_tensors = load.match_to_tensors(match)
+        match = [[['frc' + blue for blue in blues], [0, 0, 0, 0]], [['frc' + red for red in reds], [0, 0, 0, 0]], [elim, week]]
+        match_tensors = load.hypo_match_to_tensors(match)
         tensor = tf.stack((match_tensors[0][0], match_tensors[1][0]))
         output = predictor(tensor)
         output_dist = output.tensor_distribution

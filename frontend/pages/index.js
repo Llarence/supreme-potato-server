@@ -17,12 +17,8 @@ ChartJS.register(
 )
 
 export default function Home() {
-    const [blue1, blue1Set] = useState('')
-    const [blue2, blue2Set] = useState('')
-    const [blue3, blue3Set] = useState('')
-    const [red1, red1Set] = useState('')
-    const [red2, red2Set] = useState('')
-    const [red3, red3Set] = useState('')
+    const [blues, bluesSet] = useState('')
+    const [reds, redsSet] = useState('')
     const [elim, elimSet] = useState(false)
     const [week, weekSet] = useState('1')
 
@@ -98,13 +94,23 @@ export default function Home() {
 
         messageSet('Working')
 
+        bluesStr = ''
+        bluesSplit = blues.split(',')
+        for (i = 0; i < bluesSplit.length; i++) {
+            bluesStr += '&blues='
+            bluesStr += bluesSplit[i]
+        }
+
+        redsStr = ''
+        redsSplit = reds.split(',')
+        for (i = 0; i < redsSplit.length; i++) {
+            redsStr += '&reds='
+            redsStr += redsSplit[i]
+        }
+
         fetch('/api/match?' + 
-                'blue1=' + blue1 + 
-                '&blue2=' + blue2 + 
-                '&blue3=' + blue3 + 
-                '&red1=' + red1 + 
-                '&red2=' + red2 + 
-                '&red3=' + red3 + 
+                bluesStr.substring(1) +
+                redsStr +
                 '&elim=' + elim + 
                 '&week=' + week +
                 '&detail=' + detail).then(async response => {
@@ -176,15 +182,11 @@ export default function Home() {
                 <div className={style.table}>
                     <div className={style.cell}>
                         <p>Blue:</p>
-                        <input className={style.thin} type='text' value={blue1} onChange={e => blue1Set(e.target.value)}/>
-                        <input className={style.thin} type='text' value={blue2} onChange={e => blue2Set(e.target.value)}/>
-                        <input className={style.thin} type='text' value={blue3} onChange={e => blue3Set(e.target.value)}/>
+                        <input type='text' value={blues} onChange={e => bluesSet(e.target.value)}/>
                     </div>
                     <div className={style.cell}>
                         <p>Red:</p>
-                        <input className={style.thin} type='text' value={red1} onChange={e => red1Set(e.target.value)}/>
-                        <input className={style.thin} type='text' value={red2} onChange={e => red2Set(e.target.value)}/>
-                        <input className={style.thin} type='text' value={red3} onChange={e => red3Set(e.target.value)}/>
+                        <input type='text' value={reds} onChange={e => redsSet(e.target.value)}/>
                     </div>
                     <div className={style.cell}>
                         <p>Elimination:</p>
