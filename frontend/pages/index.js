@@ -94,26 +94,30 @@ export default function Home() {
 
         messageSet('Working')
 
-        bluesStr = ''
-        bluesSplit = blues.split(',')
-        for (i = 0; i < bluesSplit.length; i++) {
-            bluesStr += '&blues='
-            bluesStr += bluesSplit[i]
+        let bluesStr = ''
+        if (blues !== '') {
+            let bluesSplit = blues.split(',')
+            for (let i = 0; i < bluesSplit.length; i++) {
+                bluesStr += '&blues='
+                bluesStr += bluesSplit[i]
+            }
         }
 
-        redsStr = ''
-        redsSplit = reds.split(',')
-        for (i = 0; i < redsSplit.length; i++) {
-            redsStr += '&reds='
-            redsStr += redsSplit[i]
+        let redsStr = ''
+        if (reds !== '') {
+            let redsSplit = reds.split(',')
+            for (let i = 0; i < redsSplit.length; i++) {
+                redsStr += '&reds='
+                redsStr += redsSplit[i]
+            }
         }
 
         fetch('/api/match?' + 
-                bluesStr.substring(1) +
-                redsStr +
-                '&elim=' + elim + 
+                'elim=' + elim + 
                 '&week=' + week +
-                '&detail=' + detail).then(async response => {
+                '&detail=' + detail +
+                bluesStr +
+                redsStr).then(async response => {
             const data = await response.json();
 
             blueAutoSet(data['blue']['auto'])
