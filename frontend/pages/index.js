@@ -222,21 +222,21 @@ export default function Home() {
                 <div className={style.table}>
                     <div className={style.cell}>
                         <p>Blue:</p>
-                        <p>{'Auto:' + blueAuto.toFixed(precision)}</p>
-                        <p>{'Teleop:\n' + blueTeleop.toFixed(precision)}</p>
-                        <p>{'Engame:\n' + blueEndgame.toFixed(precision)}</p>
-                        <p>{'Foul:\n' + blueFoul.toFixed(precision)}</p>
-                        <p>{'Total:\n' + blueTotal.toFixed(precision)}</p>
-                        <p>{'Win Rate:\n' + blueWinRate.toFixed(precision) + '%'}</p>
+                        <p>{'Auto: ' + blueAuto.toFixed(precision)}</p>
+                        <p>{'Teleop: ' + blueTeleop.toFixed(precision)}</p>
+                        <p>{'Engame: ' + blueEndgame.toFixed(precision)}</p>
+                        <p>{'Foul: ' + blueFoul.toFixed(precision)}</p>
+                        <p>{'Total: ' + blueTotal.toFixed(precision)}</p>
+                        <p>{'Win Rate: ' + blueWinRate.toFixed(precision) + '%'}</p>
                     </div>
                     <div className={style.cell}>
                         <p>Red:</p>
-                        <p>{'Auto:\n' + redAuto.toFixed(precision)}</p>
-                        <p>{'Teleop:\n' + redTeleop.toFixed(precision)}</p>
-                        <p>{'Engame:\n' + redEndgame.toFixed(precision)}</p>
-                        <p>{'Foul:\n' + redFoul.toFixed(precision)}</p>
-                        <p>{'Total:\n' + redTotal.toFixed(precision)}</p>
-                        <p>{'Win Rate:\n' + redWinRate.toFixed(precision) + '%'}</p>
+                        <p>{'Auto: ' + redAuto.toFixed(precision)}</p>
+                        <p>{'Teleop: ' + redTeleop.toFixed(precision)}</p>
+                        <p>{'Engame: ' + redEndgame.toFixed(precision)}</p>
+                        <p>{'Foul: ' + redFoul.toFixed(precision)}</p>
+                        <p>{'Total: ' + redTotal.toFixed(precision)}</p>
+                        <p>{'Win Rate: ' + redWinRate.toFixed(precision) + '%'}</p>
                     </div>
                     <div className={style.cell}>
                         <select value={selectedGraph} onChange={e => { selectedGraphSet(e.target.value) } }>
