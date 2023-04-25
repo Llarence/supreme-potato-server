@@ -38,12 +38,13 @@ x_test = x[:constants.test_size]
 y_test = y[:constants.test_size]
 
 train_data = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_data = train_data.shuffle(buffer_size=1000, reshuffle_each_iteration=True)
+train_data = train_data.shuffle(buffer_size=1024, reshuffle_each_iteration=True)
 train_data = train_data.batch(1024).prefetch(tf.data.experimental.AUTOTUNE)
 test_data = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-test_data = test_data.shuffle(buffer_size=1000, reshuffle_each_iteration=True)
+test_data = test_data.shuffle(buffer_size=1024, reshuffle_each_iteration=True)
 test_data = test_data.batch(1024).prefetch(tf.data.experimental.AUTOTUNE)
 
-predictor.fit(train_data, epochs=10000, validation_data=test_data, callbacks=tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20, restore_best_weights=True))
-
-predictor.save()
+try:
+    predictor.fit(train_data, epochs=10000, validation_data=test_data, callbacks=tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20, restore_best_weights=True))
+finally:
+    predictor.save()
