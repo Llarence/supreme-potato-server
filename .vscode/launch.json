@@ -11,6 +11,14 @@
             "program": "run_server.py",
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "Update Server",
+            "type": "python",
+            "request": "launch",
+            "program": "backend/update.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
         }
     ]
 }

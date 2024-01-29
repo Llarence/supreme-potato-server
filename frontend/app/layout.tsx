@@ -9,9 +9,13 @@ export const metadata: Metadata = {
 
 export default function Layout({ children }: { children: React.ReactNode }): React.ReactElement {
     return (
-        <>
-            <Navbar />
-            <main className={styles.main}>{children}</main>
-        </>
+        <html lang='en'>
+            <body>
+                <Navbar />
+                <div className={styles.main}>
+                    {children}
+                </div>
+            </body>
+        </html>
     )
 }
