@@ -2,45 +2,85 @@
 
 import { useState, KeyboardEvent } from 'react'
 
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Filler,
+    Legend,
+} from 'chart.js'
+import { Line } from 'react-chartjs-2'
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Filler,
+    Legend
+  )
+
 import CreatableSelect from 'react-select/creatable'
 
-interface SelectOption {
-    readonly label: string;
-    readonly value: string;
+import NormalDistribution from 'normal-distribution'
+
+const points = 100
+
+interface Normal {
+    readonly mean: number
+    readonly stddev: number
 }
 
-function createOption(label: string): SelectOption {
-    return { label, value: label }
+interface SelectOption {
+    readonly label: string
+    readonly value: string
 }
 
 export default function Page() {
-    const [redSelectInputValue, setRedSelectInputValue] = useState('');
-    const [redSelectValue, setRedSelectValue] = useState<readonly SelectOption[]>([]);
+    const [blueSelectInputValue, setBlueSelectInputValue] = useState('')
+    const [blueSelectValue, setBlueSelectValue] = useState<readonly SelectOption[]>([])
 
-    const [blueSelectInputValue, setBlueSelectInputValue] = useState('');
-    const [blueSelectValue, setBlueSelectValue] = useState<readonly SelectOption[]>([]);
+    const [redSelectInputValue, setRedSelectInputValue] = useState('')
+    const [redSelectValue, setRedSelectValue] = useState<readonly SelectOption[]>([])
 
-    const [year, setYear] = useState('');
-    const [elim, setElim] = useState(false);
-    const [week, setWeek] = useState('');
+    const [year, setYear] = useState('')
+    const [elim, setElim] = useState(false)
+    const [week, setWeek] = useState('')
 
-    const [buttonDisabled, setButtonDisabled] = useState(false);
-    const [output, outputSet] = useState('');
+    const [buttonDisabled, setButtonDisabled] = useState(false)
 
-    function handleKey(event: KeyboardEvent<Element>,
+    const [xs, setXs] = useState<string[]>([])
+    const [blueYs, setBlueYs] = useState<Number[]>([])
+    const [redYs, setRedYs] = useState<Number[]>([])
+
+    function handleKey(key: string,
                        inputValue: string,
+                       selectValue: readonly SelectOption[],
                        setInputValue: React.Dispatch<React.SetStateAction<string>>,
-                       setValue: React.Dispatch<React.SetStateAction<readonly SelectOption[]>>) {
+                       setSelectValue: React.Dispatch<React.SetStateAction<readonly SelectOption[]>>): Boolean {
         if (!inputValue || !/^[1-9]\d*$/.test(inputValue)) {
-            return 
+            return false
         }
 
-        let key = event.key
-        if (key == 'Enter' || key == 'Tab') {
-            setValue((prev) => [...prev, createOption(inputValue)]);
-            setInputValue('')
-            event.preventDefault()
+        
+        for (let i = 0; i < selectValue.length; i++) {
+            if (selectValue[i].label == inputValue) {
+                return false
+            }
         }
+
+        if (key == 'Enter' || key == 'Tab') {
+            setSelectValue([...selectValue, { label: inputValue, value: inputValue }]);
+            setInputValue('')
+            return true
+        }
+
+        return false;
     }
 
     async function updateChart() {
@@ -50,11 +90,38 @@ export default function Page() {
         blueSelectValue.forEach(element => { teamRequest += '&blues=frc' + element.value })
         redSelectValue.forEach(element => { teamRequest += '&reds=frc' + element.value})
 
-        let response = await fetch('/api/match?year=' + year +
-                                   '&elim=' + elim +
-                                   '&week=' + week +
-                                   teamRequest)
-        outputSet(await response.text());
+        const rawResponse = await fetch(`/api/match?year=${year}&elim=${elim}&week=${week}${teamRequest}`)
+        if (!rawResponse.ok) {
+            setButtonDisabled(false)
+            return
+        }
+        
+        const response = await rawResponse.json()
+        
+        const blue = response['blue']['total']
+        const red = response['red']['total']
+
+        const blueNormal = new NormalDistribution(blue['mean'], blue['stddev'])
+        const redNormal = new NormalDistribution(red['mean'], red['stddev'])
+
+        const minX = Math.min(blueNormal.mean - (3 * blueNormal.standardDeviation),
+                              redNormal.mean - (3 * redNormal.standardDeviation))
+        const maxX = Math.max(blueNormal.mean + (3 * blueNormal.standardDeviation),
+                              redNormal.mean + (3 * redNormal.standardDeviation))
+
+        let xs: string[] = []
+        let blueYs: Number[] = []
+        let redYs: Number[] = []
+        for (let i = 0; i < points; i++) {
+            const x = minX + ((i / (points - 1)) * (maxX - minX))
+            xs.push(x.toFixed(2))
+            blueYs.push(blueNormal.pdf(x))
+            redYs.push(redNormal.pdf(x))
+        }
+
+        setXs(xs)
+        setBlueYs(blueYs)
+        setRedYs(redYs)
 
         setButtonDisabled(false)
     }
@@ -69,19 +136,35 @@ export default function Page() {
                 menuIsOpen={false}
                 onChange={setBlueSelectValue}
                 onInputChange={setBlueSelectInputValue}
-                onKeyDown={(event) => handleKey(event, blueSelectInputValue, setBlueSelectInputValue, setBlueSelectValue)}
+                onKeyDown={(event) => {
+                        if (handleKey(event.key, blueSelectInputValue, blueSelectValue,
+                                      setBlueSelectInputValue, setBlueSelectValue)) {
+                            event.preventDefault()
+                        }
+                    }
+                }
+                onMenuClose={() => handleKey('Enter', blueSelectInputValue, blueSelectValue,
+                                             setBlueSelectInputValue, setBlueSelectValue)}
                 placeholder='Blue Teams...'
                 value={blueSelectValue}
             />
             <CreatableSelect
-                components={ { DropdownIndicator: null } }
+                components={{ DropdownIndicator: null }}
                 inputValue={redSelectInputValue}
                 isClearable
                 isMulti
                 menuIsOpen={false}
                 onChange={(newValue) => setRedSelectValue(newValue)}
                 onInputChange={(newValue) => setRedSelectInputValue(newValue)}
-                onKeyDown={(event) => handleKey(event, redSelectInputValue, setRedSelectInputValue, setRedSelectValue)}
+                onKeyDown={(event) => {
+                        if (handleKey(event.key, redSelectInputValue, redSelectValue,
+                                      setRedSelectInputValue, setRedSelectValue)) {
+                            event.preventDefault()
+                        }
+                    }
+                }
+                onMenuClose={() => handleKey('Enter', redSelectInputValue, redSelectValue,
+                                             setRedSelectInputValue, setRedSelectValue)}
                 placeholder='Red Teams...'
                 value={redSelectValue}
             />
@@ -89,7 +172,25 @@ export default function Page() {
             <input type='checkbox' checked={elim} onChange={() => setElim(!elim)} />
             <input type='number' value={week} onChange={(event) => setWeek(event?.target.value)} />
             <button onClick={updateChart} disabled={buttonDisabled}>Go</button>
-            <p>{output}</p>
+            <Line
+                data={{
+                    labels: xs,
+                    datasets: [{
+                        fill: true,
+                        label: 'Blue',
+                        data: blueYs,
+                        borderColor: 'rgb(53, 56, 235)',
+                        backgroundColor: 'rgba(53, 56, 235, 0.5)'
+                    },
+                    {
+                        fill: true,
+                        label: 'Red',
+                        data: redYs,
+                        borderColor: 'rgb(235, 69, 54)',
+                        backgroundColor: 'rgba(235, 69, 54, 0.5)'
+                    }]
+                }}
+            />
         </>
     )
 }
