@@ -48,10 +48,13 @@ export default function Page() {
     const [redSelectInputValue, setRedSelectInputValue] = useState('')
     const [redSelectValue, setRedSelectValue] = useState<readonly SelectOption[]>([])
 
+    const [response, setResponse] = useState<any>(undefined)
+
     const [year, setYear] = useState('')
     const [elim, setElim] = useState(false)
     const [week, setWeek] = useState('')
 
+    const [dataType, setDataType] = useState('total')
     const [buttonDisabled, setButtonDisabled] = useState(false)
 
     const [blueDistribution, setBlueDistribution] = useState<NormalDistribution>(new NormalDistribution())
@@ -86,6 +89,30 @@ export default function Page() {
         return false;
     }
 
+    function updateDistributions(blueDistribution: NormalDistribution, redDistribution: NormalDistribution) {
+        const minX = Math.min(blueDistribution.mean - (3 * blueDistribution.standardDeviation),
+                              redDistribution.mean - (3 * redDistribution.standardDeviation))
+        const maxX = Math.max(blueDistribution.mean + (3 * blueDistribution.standardDeviation),
+                              redDistribution.mean + (3 * redDistribution.standardDeviation))
+
+        let xs: string[] = []
+        let blueYs: Number[] = []
+        let redYs: Number[] = []
+        for (let i = 0; i < points; i++) {
+            const x = minX + ((i / (points - 1)) * (maxX - minX))
+            xs.push(x.toFixed(2))
+            blueYs.push(blueDistribution.pdf(x))
+            redYs.push(redDistribution.pdf(x))
+        }
+
+        setXs(xs)
+        setBlueYs(blueYs)
+        setRedYs(redYs)
+
+        setBlueDistribution(blueDistribution)
+        setRedDistribution(redDistribution)
+    }
+
     async function updateChart() {
         setButtonDisabled(true)
 
@@ -104,32 +131,10 @@ export default function Page() {
         const blue = response['blue']['total']
         const red = response['red']['total']
 
-        const blueDistribution = new NormalDistribution(blue['mean'], blue['stddev'])
-        const redDistribution = new NormalDistribution(red['mean'], red['stddev'])
+        updateDistributions(new NormalDistribution(blue['mean'], blue['stddev']), new NormalDistribution(red['mean'], red['stddev']))
 
-        const minX = Math.min(blueDistribution.mean - (3 * blueDistribution.standardDeviation),
-                              redDistribution.mean - (3 * redDistribution.standardDeviation))
-        const maxX = Math.max(blueDistribution.mean + (3 * blueDistribution.standardDeviation),
-                              redDistribution.mean + (3 * redDistribution.standardDeviation))
-
-        let xs: string[] = []
-        let blueYs: Number[] = []
-        let redYs: Number[] = []
-        console.log(blueDistribution, redDistribution)
-        for (let i = 0; i < points; i++) {
-            const x = minX + ((i / (points - 1)) * (maxX - minX))
-            xs.push(x.toFixed(2))
-            blueYs.push(blueDistribution.pdf(x))
-            redYs.push(redDistribution.pdf(x))
-        }
-
-        setXs(xs)
-        setBlueYs(blueYs)
-        setRedYs(redYs)
-
-        setBlueDistribution(blueDistribution)
-        setRedDistribution(redDistribution)
-
+        setDataType('total')
+        setResponse(response)
         setButtonDisabled(false)
     }
 
@@ -179,6 +184,21 @@ export default function Page() {
             <input type='checkbox' checked={elim} onChange={() => setElim(!elim)} />
             <input type='number' value={week} onChange={(event) => setWeek(event?.target.value)} />
             <button onClick={updateChart} disabled={buttonDisabled}>Go</button>
+            <select disabled={response == undefined} value={dataType} onChange={event => {
+                        const value = event.target.value
+                        const blue = response['blue'][value]
+                        const red = response['red'][value]
+                
+                        updateDistributions(new NormalDistribution(blue['mean'], blue['stddev']), new NormalDistribution(red['mean'], red['stddev']))
+                
+                        setDataType(value) 
+                    }
+                }>
+                <option value='total'>Total</option>
+                <option value='auto'>Auto</option>
+                <option value='teleop'>Teleop</option>
+                <option value='foul'>Foul</option>
+            </select>
             <Line
                 options={{
                     plugins: {
