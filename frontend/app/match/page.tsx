@@ -29,12 +29,8 @@ import CreatableSelect from 'react-select/creatable'
 
 import NormalDistribution from 'normal-distribution'
 
-const points = 100
-
-interface Normal {
-    readonly mean: number
-    readonly stddev: number
-}
+const points = 250
+const zeroLimit = 25
 
 interface SelectOption {
     readonly label: string
@@ -90,19 +86,28 @@ export default function Page() {
     }
 
     function updateDistributions(blueDistribution: NormalDistribution, redDistribution: NormalDistribution) {
-        const minX = Math.min(blueDistribution.mean - (3 * blueDistribution.standardDeviation),
+        let minX = Math.min(blueDistribution.mean - (3 * blueDistribution.standardDeviation),
                               redDistribution.mean - (3 * redDistribution.standardDeviation))
         const maxX = Math.max(blueDistribution.mean + (3 * blueDistribution.standardDeviation),
                               redDistribution.mean + (3 * redDistribution.standardDeviation))
+
+        minX = Math.max(minX, -(maxX - minX) / zeroLimit)
+        const deltaX = (maxX - minX) / (points - 1)
 
         let xs: string[] = []
         let blueYs: Number[] = []
         let redYs: Number[] = []
         for (let i = 0; i < points; i++) {
-            const x = minX + ((i / (points - 1)) * (maxX - minX))
+            const x = minX + (i * deltaX)
+
             xs.push(x.toFixed(2))
-            blueYs.push(blueDistribution.pdf(x))
-            redYs.push(redDistribution.pdf(x))
+            if (x >= 0) {
+                blueYs.push(blueDistribution.pdf(x) / (1 - blueDistribution.cdf(0)))
+                redYs.push(redDistribution.pdf(x) / (1 - redDistribution.cdf(0)))
+            } else {
+                blueYs.push(0)
+                redYs.push(0)
+            }
         }
 
         setXs(xs)
@@ -209,10 +214,14 @@ export default function Page() {
                                     const x = Number(context.label);
                                     
                                     let val = 1
-                                    if (label == 'Blue') {
-                                        val -= blueDistribution.cdf(x)
-                                    } else if (label == 'Red') {
-                                        val -= redDistribution.cdf(x)
+                                    if (x >= 0) {
+                                        if (label == 'Blue') {
+                                            const cdf0 = blueDistribution.cdf(0)
+                                            val -= (blueDistribution.cdf(x) - cdf0) / (1 - cdf0)
+                                        } else if (label == 'Red') {
+                                            const cdf0 = redDistribution.cdf(0)
+                                            val -= (redDistribution.cdf(x) - cdf0) / (1 - cdf0)
+                                        }
                                     }
                                     
                                     return `${label}: ${(val * 100).toFixed(2)}%`;
