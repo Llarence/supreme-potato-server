@@ -54,6 +54,9 @@ export default function Page() {
 
     const [buttonDisabled, setButtonDisabled] = useState(false)
 
+    const [blueDistribution, setBlueDistribution] = useState<NormalDistribution>(new NormalDistribution())
+    const [redDistribution, setRedDistribution] = useState<NormalDistribution>(new NormalDistribution())
+
     const [xs, setXs] = useState<string[]>([])
     const [blueYs, setBlueYs] = useState<Number[]>([])
     const [redYs, setRedYs] = useState<Number[]>([])
@@ -101,27 +104,31 @@ export default function Page() {
         const blue = response['blue']['total']
         const red = response['red']['total']
 
-        const blueNormal = new NormalDistribution(blue['mean'], blue['stddev'])
-        const redNormal = new NormalDistribution(red['mean'], red['stddev'])
+        const blueDistribution = new NormalDistribution(blue['mean'], blue['stddev'])
+        const redDistribution = new NormalDistribution(red['mean'], red['stddev'])
 
-        const minX = Math.min(blueNormal.mean - (3 * blueNormal.standardDeviation),
-                              redNormal.mean - (3 * redNormal.standardDeviation))
-        const maxX = Math.max(blueNormal.mean + (3 * blueNormal.standardDeviation),
-                              redNormal.mean + (3 * redNormal.standardDeviation))
+        const minX = Math.min(blueDistribution.mean - (3 * blueDistribution.standardDeviation),
+                              redDistribution.mean - (3 * redDistribution.standardDeviation))
+        const maxX = Math.max(blueDistribution.mean + (3 * blueDistribution.standardDeviation),
+                              redDistribution.mean + (3 * redDistribution.standardDeviation))
 
         let xs: string[] = []
         let blueYs: Number[] = []
         let redYs: Number[] = []
+        console.log(blueDistribution, redDistribution)
         for (let i = 0; i < points; i++) {
             const x = minX + ((i / (points - 1)) * (maxX - minX))
             xs.push(x.toFixed(2))
-            blueYs.push(blueNormal.pdf(x))
-            redYs.push(redNormal.pdf(x))
+            blueYs.push(blueDistribution.pdf(x))
+            redYs.push(redDistribution.pdf(x))
         }
 
         setXs(xs)
         setBlueYs(blueYs)
         setRedYs(redYs)
+
+        setBlueDistribution(blueDistribution)
+        setRedDistribution(redDistribution)
 
         setButtonDisabled(false)
     }
@@ -173,6 +180,36 @@ export default function Page() {
             <input type='number' value={week} onChange={(event) => setWeek(event?.target.value)} />
             <button onClick={updateChart} disabled={buttonDisabled}>Go</button>
             <Line
+                options={{
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label;
+                                    const x = Number(context.label);
+                                    
+                                    let val = 1
+                                    if (label == 'Blue') {
+                                        val -= blueDistribution.cdf(x)
+                                    } else if (label == 'Red') {
+                                        val -= redDistribution.cdf(x)
+                                    }
+                                    
+                                    return `${label}: ${(val * 100).toFixed(2)}%`;
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        point:{
+                            radius: 0
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'nearest',
+                    }
+                }}
                 data={{
                     labels: xs,
                     datasets: [{

@@ -11,6 +11,7 @@ def run_frontend():
     import os
 
     os.chdir(os.getcwd() + '/frontend')
+    os.system('npm run build')
     os.system('npm run start')
 
 backend = multitasking.Process(target=run_backend)
