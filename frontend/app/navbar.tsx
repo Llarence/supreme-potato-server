@@ -5,6 +5,7 @@ export default function Navbar(): React.ReactElement {
         <div className={styles.sidenav}>
             <a href='/'>Home</a>
             <a href='/match'>Match</a>
+            <a href='/team'>Team</a>
         </div>
     )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, KeyboardEvent } from 'react'
+import { useState } from 'react'
 
 import {
     Chart as ChartJS,
@@ -153,7 +153,7 @@ export default function Page() {
                 menuIsOpen={false}
                 onChange={setBlueSelectValue}
                 onInputChange={setBlueSelectInputValue}
-                onKeyDown={(event) => {
+                onKeyDown={event => {
                         if (handleKey(event.key, blueSelectInputValue, blueSelectValue,
                                       setBlueSelectInputValue, setBlueSelectValue)) {
                             event.preventDefault()
@@ -171,9 +171,9 @@ export default function Page() {
                 isClearable
                 isMulti
                 menuIsOpen={false}
-                onChange={(newValue) => setRedSelectValue(newValue)}
-                onInputChange={(newValue) => setRedSelectInputValue(newValue)}
-                onKeyDown={(event) => {
+                onChange={newValue => setRedSelectValue(newValue)}
+                onInputChange={newValue => setRedSelectInputValue(newValue)}
+                onKeyDown={event => {
                         if (handleKey(event.key, redSelectInputValue, redSelectValue,
                                       setRedSelectInputValue, setRedSelectValue)) {
                             event.preventDefault()
@@ -185,9 +185,9 @@ export default function Page() {
                 placeholder='Red Teams...'
                 value={redSelectValue}
             />
-            <input type='number' value={year} onChange={(event) => setYear(event.target.value)} />
+            <input type='number' value={year} onChange={event => setYear(event.target.value)} />
             <input type='checkbox' checked={elim} onChange={() => setElim(!elim)} />
-            <input type='number' value={week} onChange={(event) => setWeek(event?.target.value)} />
+            <input type='number' value={week} onChange={event => setWeek(event?.target.value)} />
             <button onClick={updateChart} disabled={buttonDisabled}>Go</button>
             <select disabled={response == undefined} value={dataType} onChange={event => {
                         const value = event.target.value
