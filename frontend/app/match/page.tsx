@@ -30,11 +30,55 @@ import CreatableSelect from 'react-select/creatable'
 import NormalDistribution from 'normal-distribution'
 
 const points = 250
-const zeroLimit = 25
+
+// Sets the y value of the bound points relative to the max high of the distribution
+const boundsYFactor = 0.025
 
 interface SelectOption {
     readonly label: string
     readonly value: string
+}
+
+function polyDiv(xSqrd: number, x: number, a: number, b: number, c: number, d: number): number {
+    const e = xSqrd + (a * x) + b
+    const f = xSqrd + (c * x) + d
+    return e / f
+}
+
+function normalERFC0(x: number) {
+    const xSqrd = x * x
+
+    const a = (0.56418958354775629 / (x + 2.06955023132914151))
+    const b = polyDiv(xSqrd, x, 2.71078540045147805, 5.80755613130301624, 3.47954057099518960, 12.06166887286239555)
+    const c = polyDiv(xSqrd, x, 3.47469513777439592, 12.07402036406381411, 3.72068443960225092, 8.44319781003968454)
+    const d = polyDiv(xSqrd, x, 4.00561509202259545, 9.30596659485887898, 3.90225704029924078, 6.36161630953880464)
+    const e = polyDiv(xSqrd, x, 5.16722705817812584, 9.12661617673673262, 4.03296893109262491, 5.13578530585681539)
+    const f = polyDiv(xSqrd, x, 5.95908795446633271, 9.19435612886969243, 4.11240942957450885, 4.48640329523408675)
+    const g = Math.exp(-xSqrd)
+
+    return a * b * c * d * e * f * g
+}
+
+function erfc0(mean: number, standardDeviation: number) {
+    const x = -mean / standardDeviation / Math.SQRT2
+    
+    if (x < 0) {
+        return 2 - normalERFC0(-x)
+    } else {
+        return normalERFC0(x)
+    }
+}
+
+function erfc(x: number, mean: number, standardDeviation: number) {
+    return erfc0(mean - x, standardDeviation)
+}
+
+function calcDisBounds(distribution: NormalDistribution): {low: number, high: number} {
+    // The erfc0 gets cancelled out so this isn't the height of the truncated normal
+    const maxHeight = distribution.pdf(Math.max(0, distribution.mean))
+    const a = boundsYFactor * maxHeight * distribution.standardDeviation * Math.sqrt(2 * Math.PI)
+    const b = distribution.standardDeviation * Math.sqrt(-2 * Math.log(a))
+    return {low: Math.max(distribution.mean - b, 0), high: distribution.mean + b}
 }
 
 export default function Page() {
@@ -77,22 +121,25 @@ export default function Page() {
         }
 
         if (key == 'Enter' || key == 'Tab') {
-            setSelectValue([...selectValue, { label: inputValue, value: inputValue }]);
+            setSelectValue([...selectValue, { label: inputValue, value: inputValue }])
             setInputValue('')
             return true
         }
 
-        return false;
+        return false
     }
 
     function updateDistributions(blueDistribution: NormalDistribution, redDistribution: NormalDistribution) {
-        let minX = Math.min(blueDistribution.mean - (3 * blueDistribution.standardDeviation),
-                              redDistribution.mean - (3 * redDistribution.standardDeviation))
-        const maxX = Math.max(blueDistribution.mean + (3 * blueDistribution.standardDeviation),
-                              redDistribution.mean + (3 * redDistribution.standardDeviation))
+        const blueBounds = calcDisBounds(blueDistribution)
+        const redBounds = calcDisBounds(redDistribution)
 
-        minX = Math.max(minX, -(maxX - minX) / zeroLimit)
+        const minX = Math.min(blueBounds.low, redBounds.low)
+        const maxX = Math.max(blueBounds.high, redBounds.high)
+
         const deltaX = (maxX - minX) / (points - 1)
+
+        const blueScale = 2.0 / erfc0(blueDistribution.mean, blueDistribution.standardDeviation)
+        const redScale = 2.0 / erfc0(redDistribution.mean, redDistribution.standardDeviation)
 
         let xs: string[] = []
         let blueYs: Number[] = []
@@ -102,8 +149,8 @@ export default function Page() {
 
             xs.push(x.toFixed(2))
             if (x >= 0) {
-                blueYs.push(blueDistribution.pdf(x) / (1 - blueDistribution.cdf(0)))
-                redYs.push(redDistribution.pdf(x) / (1 - redDistribution.cdf(0)))
+                blueYs.push(blueDistribution.pdf(x) * blueScale)
+                redYs.push(redDistribution.pdf(x) * redScale)
             } else {
                 blueYs.push(0)
                 redYs.push(0)
@@ -210,21 +257,21 @@ export default function Page() {
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    const label = context.dataset.label;
-                                    const x = Number(context.label);
+                                    const label = context.dataset.label
+                                    const x = Number(context.label)
                                     
                                     let val = 1
                                     if (x >= 0) {
                                         if (label == 'Blue') {
-                                            const cdf0 = blueDistribution.cdf(0)
-                                            val -= (blueDistribution.cdf(x) - cdf0) / (1 - cdf0)
+                                            val = erfc(x, blueDistribution.mean, blueDistribution.standardDeviation) / 
+                                                erfc0(blueDistribution.mean, blueDistribution.standardDeviation)
                                         } else if (label == 'Red') {
-                                            const cdf0 = redDistribution.cdf(0)
-                                            val -= (redDistribution.cdf(x) - cdf0) / (1 - cdf0)
+                                            val = erfc(x, redDistribution.mean, redDistribution.standardDeviation) / 
+                                                erfc0(redDistribution.mean, redDistribution.standardDeviation)
                                         }
                                     }
                                     
-                                    return `${label}: ${(val * 100).toFixed(2)}%`;
+                                    return `${label}: ${(val * 100).toFixed(2)}%`
                                 }
                             }
                         }
