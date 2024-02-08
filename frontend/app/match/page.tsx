@@ -29,15 +29,23 @@ import CreatableSelect from 'react-select/creatable'
 
 import NormalDistribution from 'normal-distribution'
 
-const points = 250
+// TODO: Some distributions still will not graph properly
+//  (Blue: 7500, Red: 2521, 2910, 111, year: 2019, week: 3, type: foul)
+// TODO: Make sure the win bounds and sample points give good numbers
+
+const graphPoints = 250
+const winSamplePoints = 5e4
 
 // Sets the y value of the bound points relative to the max high of the distribution
-const boundsYFactor = 0.025
+const graphBoundsYFactor = 0.025
+const winBoundsYFactor = 1e-6
 
 interface SelectOption {
     readonly label: string
     readonly value: string
 }
+
+// All these functions are necesary for numerical accuracy
 
 function polyDiv(xSqrd: number, x: number, a: number, b: number, c: number, d: number): number {
     const e = xSqrd + (a * x) + b
@@ -73,7 +81,38 @@ function erfc(x: number, mean: number, standardDeviation: number) {
     return erfc0(mean - x, standardDeviation)
 }
 
-function calcDisBounds(distribution: NormalDistribution): {low: number, high: number} {
+function sampleBounds(distribution1: NormalDistribution, distribution2: NormalDistribution, low: number, high: number, samples: number): number {
+    let res = 0
+
+    const deltaX = (high - low) / (samples - 1)
+    for (let i = 0; i < samples; i++) {
+        const x = low + (deltaX * i)
+        const cdf1 = erfc(x, distribution1.mean, distribution1.standardDeviation) / 
+            erfc0(distribution1.mean, distribution1.standardDeviation)
+        const pdf2 = distribution2.pdf(x) * 2.0 / erfc0(distribution2.mean, distribution2.standardDeviation)
+        
+        res += cdf1 * pdf2 * deltaX
+    }
+    
+    return res
+}
+
+function getWin(distribution1: NormalDistribution, distribution2: NormalDistribution): number {
+    const bounds1 = calcDisBounds(distribution1, winBoundsYFactor)
+    const bounds2 = calcDisBounds(distribution2, winBoundsYFactor)
+
+    if (bounds1.low > bounds2.high || bounds2.low > bounds1.high) {
+        return sampleBounds(distribution1, distribution2, bounds1.low, bounds1.high, winSamplePoints) +
+            sampleBounds(distribution1, distribution2, bounds2.low, bounds2.high, winSamplePoints)
+    } else {
+        const low = Math.min(bounds1.low, bounds2.low);
+        const high = Math.min(bounds1.high, bounds2.high);
+
+        return sampleBounds(distribution1, distribution2, low, high, winSamplePoints * 2)
+    }
+}
+
+function calcDisBounds(distribution: NormalDistribution, boundsYFactor: number): {low: number, high: number} {
     // The erfc0 gets cancelled out so this isn't the height of the truncated normal
     const maxHeight = distribution.pdf(Math.max(0, distribution.mean))
     const a = boundsYFactor * maxHeight * distribution.standardDeviation * Math.sqrt(2 * Math.PI)
@@ -104,6 +143,8 @@ export default function Page() {
     const [blueYs, setBlueYs] = useState<Number[]>([])
     const [redYs, setRedYs] = useState<Number[]>([])
 
+    const [winRate, setWinRate] = useState(NaN)
+
     function handleKey(key: string,
                        inputValue: string,
                        selectValue: readonly SelectOption[],
@@ -130,13 +171,13 @@ export default function Page() {
     }
 
     function updateDistributions(blueDistribution: NormalDistribution, redDistribution: NormalDistribution) {
-        const blueBounds = calcDisBounds(blueDistribution)
-        const redBounds = calcDisBounds(redDistribution)
+        const blueBounds = calcDisBounds(blueDistribution, graphBoundsYFactor)
+        const redBounds = calcDisBounds(redDistribution, graphBoundsYFactor)
 
         const minX = Math.min(blueBounds.low, redBounds.low)
         const maxX = Math.max(blueBounds.high, redBounds.high)
 
-        const deltaX = (maxX - minX) / (points - 1)
+        const deltaX = (maxX - minX) / (graphPoints - 1)
 
         const blueScale = 2.0 / erfc0(blueDistribution.mean, blueDistribution.standardDeviation)
         const redScale = 2.0 / erfc0(redDistribution.mean, redDistribution.standardDeviation)
@@ -144,7 +185,7 @@ export default function Page() {
         let xs: string[] = []
         let blueYs: Number[] = []
         let redYs: Number[] = []
-        for (let i = 0; i < points; i++) {
+        for (let i = 0; i < graphPoints; i++) {
             const x = minX + (i * deltaX)
 
             xs.push(x.toFixed(2))
@@ -161,6 +202,7 @@ export default function Page() {
         setBlueYs(blueYs)
         setRedYs(redYs)
 
+        setWinRate(getWin(blueDistribution, redDistribution))
         setBlueDistribution(blueDistribution)
         setRedDistribution(redDistribution)
     }
@@ -235,6 +277,7 @@ export default function Page() {
             <input type='number' value={year} onChange={event => setYear(event.target.value)} />
             <input type='checkbox' checked={elim} onChange={() => setElim(!elim)} />
             <input type='number' value={week} onChange={event => setWeek(event?.target.value)} />
+            <p>{`Chance blue has a higher ${dataType}: ${(winRate * 100).toFixed(2)}%`}</p>
             <button onClick={updateChart} disabled={buttonDisabled}>Go</button>
             <select disabled={response == undefined} value={dataType} onChange={event => {
                         const value = event.target.value
