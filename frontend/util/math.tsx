@@ -25,7 +25,7 @@ export function normalERFC0(x: number) {
 
 function erfc0(mean: number, standardDeviation: number) {
     const x = -mean / standardDeviation / Math.SQRT2
-    
+
     if (x < 0) {
         return 2 - normalERFC0(-x)
     } else {
@@ -43,13 +43,13 @@ function sampleBounds(distribution1: NormalDistribution, distribution2: NormalDi
     const deltaX = (high - low) / (samples - 1)
     for (let i = 0; i < samples; i++) {
         const x = low + (deltaX * i)
-        const cdf1 = erfc(x, distribution1.mean, distribution1.standardDeviation) / 
+        const cdf1 = erfc(x, distribution1.mean, distribution1.standardDeviation) /
             erfc0(distribution1.mean, distribution1.standardDeviation)
         const pdf2 = distribution2.pdf(x) * 2.0 / erfc0(distribution2.mean, distribution2.standardDeviation)
-        
+
         res += cdf1 * pdf2 * deltaX
     }
-    
+
     return res
 }
 

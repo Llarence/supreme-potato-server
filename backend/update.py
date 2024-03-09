@@ -9,5 +9,5 @@ for year in config.years:
 
     model = models.GameModel(year, data.team_vector_size, data.meta_vector_size, data.output_size)
     train.train(model, data)
-    
+
     model.save_model()

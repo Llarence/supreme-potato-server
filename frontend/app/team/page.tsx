@@ -21,7 +21,7 @@ export default function Page() {
             setButtonDisabled(false)
             return
         }
-        
+
         const response = await rawResponse.json()
 
         let output = ''

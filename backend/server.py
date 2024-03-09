@@ -20,7 +20,7 @@ def convert_tensor(team, data):
     id = data.teams_to_ids.get(team, None)
     if id is None:
         return None
-            
+
     return data.one_hot_teams[id]
 
 
@@ -30,9 +30,9 @@ def convert_tensors(teams, data):
         tensor = convert_tensor(team, data)
         if tensor is None:
             return None
-        
+
         tensors.append(tensor)
-    
+
     return tensors
 
 
@@ -98,7 +98,7 @@ for year in config.years:
 year_to_team_vectors = {}
 for year in config.years:
     data, model = year_to_data_and_model[year]
-    
+
     year_to_team_vectors[year] = TeamVectors(
         [vectorizer(data.one_hot_teams) for vectorizer in model.mean_offense_vectorizers],
         [vectorizer(data.one_hot_teams) for vectorizer in model.mean_defense_vectorizers],
@@ -122,19 +122,19 @@ def get_match(response: fastapi.Response,
     if data is None:
         response.status_code = fastapi.status.HTTP_400_BAD_REQUEST
         return
-    
+
     blue_tensors = convert_tensors(blues, data)
     if blue_tensors is None:
         response.status_code = fastapi.status.HTTP_400_BAD_REQUEST
         return
-    
+
     blue_tensor = sum(blue_tensors)
 
     red_tensors = convert_tensors(reds, data)
     if red_tensors is None:
         response.status_code = fastapi.status.HTTP_400_BAD_REQUEST
         return
-    
+
     red_tensor = sum(red_tensors)
 
     meta_tensor = tf.constant((elim, week), dtype=tf.float32)
@@ -142,7 +142,7 @@ def get_match(response: fastapi.Response,
     output = model.model(((tf.stack([blue_tensor, red_tensor], 0),
                            tf.stack([red_tensor, blue_tensor], 0),
                            tf.stack([meta_tensor, meta_tensor], 0))))
-    
+
     means = output.mean().numpy().tolist()
     stddevs = output.stddev().numpy().tolist()
 
@@ -164,7 +164,7 @@ def get_team(response: fastapi.Response,
     if vectors is None:
         response.status_code = fastapi.status.HTTP_400_BAD_REQUEST
         return
-    
+
     data, _ = year_to_data_and_model[year]
     id = data.teams_to_ids.get(team)
     if id is None:
@@ -177,7 +177,7 @@ def get_team(response: fastapi.Response,
         return vector.numpy().tolist()
 
     distances = tf.math.reduce_euclidean_norm(vectors - vector, axis=1)
-    
+
     teams_distances_vectors = list(zip(data.teams, distances, vectors))
     teams_distances_vectors.sort(key=lambda x: x[1])
     teams_distances_vectors = teams_distances_vectors[:similars]

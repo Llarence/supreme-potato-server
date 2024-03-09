@@ -80,7 +80,7 @@ export default function Page() {
             return false
         }
 
-        
+
         for (let i = 0; i < selectValue.length; i++) {
             if (selectValue[i].label == inputValue) {
                 return false
@@ -145,9 +145,9 @@ export default function Page() {
             setButtonDisabled(false)
             return
         }
-        
+
         const response = await rawResponse.json()
-        
+
         const blue = response['blue']['total']
         const red = response['red']['total']
 
