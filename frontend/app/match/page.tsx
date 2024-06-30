@@ -80,7 +80,6 @@ export default function Page() {
             return false
         }
 
-
         for (let i = 0; i < selectValue.length; i++) {
             if (selectValue[i].label == inputValue) {
                 return false
@@ -200,19 +199,25 @@ export default function Page() {
                 placeholder='Red Teams...'
                 value={redSelectValue}
             />
-            <input type='number' value={year} onChange={event => setYear(event.target.value)} />
-            <input type='checkbox' checked={elim} onChange={() => setElim(!elim)} />
-            <input type='number' value={week} onChange={event => setWeek(event?.target.value)} />
+            <input type='number' id='year' value={year} onChange={event => setYear(event.target.value)}/>
+            <label htmlFor='year'>Year</label>
+            <br></br>
+            <input type='checkbox' id='Elims' checked={elim} onChange={() => setElim(!elim)}/>
+            <label htmlFor='Elims'>Elims</label>
+            <br></br>
+            <input type='number' id='week' value={week} onChange={event => setWeek(event?.target.value)}/>
+            <label htmlFor='week'>Week</label>
+            <br></br>
             <p>{`Chance blue has a higher ${dataType}: ${(winRate * 100).toFixed(2)}%`}</p>
             <button onClick={updateChart} disabled={buttonDisabled}>Go</button>
             <select disabled={response == undefined} value={dataType} onChange={event => {
                         const value = event.target.value
                         const blue = response['blue'][value]
                         const red = response['red'][value]
-                
+
                         updateDistributions(new NormalDistribution(blue['mean'], blue['stddev']), new NormalDistribution(red['mean'], red['stddev']))
-                
-                        setDataType(value) 
+
+                        setDataType(value)
                     }
                 }>
                 <option value='total'>Total</option>
@@ -228,7 +233,7 @@ export default function Page() {
                                 label: function(context) {
                                     const label = context.dataset.label
                                     const x = Number(context.label)
-                                    
+
                                     let val = 1
                                     if (x >= 0) {
                                         if (label == 'Blue') {
@@ -239,7 +244,7 @@ export default function Page() {
                                                 erfc(0, redDistribution.mean, redDistribution.standardDeviation)
                                         }
                                     }
-                                    
+
                                     return `${label}: ${(val * 100).toFixed(2)}%`
                                 }
                             }
